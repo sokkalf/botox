@@ -8,7 +8,11 @@ class Plugins
     
     case command.upcase
       when 'OP' then
-        change_mode(get_nick_from_prefix(mask), params, '+o') if authenticated?(mask)
+        if op_in_channel?(params, get_nick)
+          change_mode(get_nick_from_prefix(mask), params, '+o') if authenticated?(mask)
+        else
+          send_message_to_user(get_nick_from_prefix(mask), "I'm not in that channel, or not operator.")
+        end
     end
   end
 end

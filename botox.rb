@@ -24,10 +24,10 @@ class EventHandler
           if member[/^\+/] then user['mode'] = 'voice'
           elsif member[/^@/] then user['mode'] = 'op'
           else user['mode'] = 'normal' end
-          user['nick'] = member.match(/([^+@]\S*)/).captures
+          user['nick'] = member.match(/([^+@]\S*)/).captures.first
           user
         end
-        pp members
+        @ch.update_channel_list(channel, members)
     end
   end
 
@@ -55,12 +55,10 @@ class EventHandler
   end
 
   def handle_private_message(prefix, params, message)
-    puts "#{get_nick_from_prefix(prefix)} - #{params} - #{message}"
     if params == @ch.get_nick
       command, params = message.match(/^(\S*)\s*?(:?.*)$/).captures
       handle_bot_command(prefix, command, params)
     else
-      puts "#{get_nick_from_prefix(prefix)} - #{params} - #{message}"
       channel_data = Hash.new
       channel_data['timestamp'] = Time.now
       channel_data['mask'] = prefix
@@ -76,6 +74,45 @@ class EventHandler
     case type.upcase
       when 'PING' then answer_ping(message)
       when 'PRIVMSG' then handle_private_message(prefix, params, message)
+      when 'JOIN' then
+        unless @ch.get_nick == get_nick_from_prefix(prefix)
+          members = @ch.get_channel_members(message)
+          joined_member = Hash.new
+          joined_member['nick'] = get_nick_from_prefix(prefix)
+          joined_member['mode'] = 'normal'
+          members << joined_member
+          @ch.update_channel_list(params, members)
+        end
+      when 'PART' then
+        if @ch.get_nick == get_nick_from_prefix(prefix)
+          @ch.update_channel_list(params, nil)
+        else
+          members = @ch.get_channel_members(params).select{|member| member['nick'] != get_nick_from_prefix(prefix)}
+          @ch.update_channel_list(params, members)
+        end
+      when 'KICK' then
+        channel, nick = params.match(/^(\S*)\s*(\S*)/).captures
+        if nick == @ch.get_nick
+          @ch.update_channel_list(channel, nil)
+        else
+          members = @ch.get_channel_members(channel).select{|member| member['nick'] != nick}
+          @ch.update_channel_list(channel, members)
+        end
+      when 'MODE' then
+        # 'aaa!~sokkalf@localhost' 'MODE' '#dirc +o botox' '' 
+        channel, mode, nick = params.match(/^(\S*)\s(\S*)\s(\S*)$/).captures
+        members = @ch.get_channel_members(channel).map{|member|
+          if member['nick'] == nick
+            case mode
+              when '+o' then member['mode'] = 'op'
+              when '+v' then member['mode'] = 'voice'
+              when '-o' then member['mode'] = 'normal'
+              when '-v' then member['mode'] = 'normal'
+            end
+          end
+          member
+        }
+        @ch.update_channel_list(channel, members)
       when 'ERROR' then
         if @ch.registering?
           puts "Error registering with IRC server: #{message}"
@@ -85,7 +122,6 @@ class EventHandler
     if type =~ /[0-9][0-9][0-9]/
       handle_numeric(prefix, type, params, message)
     end
-    puts "'#{prefix}' '#{type}' '#{params}' '#{message}'"
   end
 end
 
@@ -97,6 +133,7 @@ class ConnectionHandler
     @authenticated_admins = Hash.new
     @registered = false
     @registering = false
+    @channels_joined = Hash.new
     @startup_time = Time.now
     @plugins = Hash.new
     add_admins
@@ -161,7 +198,6 @@ class ConnectionHandler
   end
 
   def set_registered(r)
-    puts 'Setting registered'
     @registered = r
     @registering = false
   end
@@ -175,6 +211,24 @@ class ConnectionHandler
     send_raw_message("nick #{get_nick}")
   end
 
+  def update_channel_list(channel, members)
+    @channels_joined[channel] = members
+  end
+
+  def get_channel_members(channel)
+    @channels_joined[channel] ||= []
+  end
+
+  def in_channel?(channel, nick)
+    result = get_channel_members(channel.strip).select {|member| member['nick'] == nick.strip}
+    !result.nil? && !result.empty?
+  end
+
+  def op_in_channel?(channel, nick)
+    result = get_channel_members(channel.strip).select {|member| member['nick'] == nick.strip && member['mode'] == 'op'}
+    !result.nil? && !result.empty?
+  end
+
   def join_channels
     channels = get_config['channels']
     unless channels.nil?
@@ -185,7 +239,6 @@ class ConnectionHandler
   end
 
   def raw_message_handler(raw_message)
-    #puts raw_message
     prefix, type, params, message = raw_message.match(/^(?:[:](\S+) )?(\S+)(?: (?!:)(.+?))?(?: [:](.+))?$/).captures
     @eh.handle_event(prefix, type, params, message)
   end
