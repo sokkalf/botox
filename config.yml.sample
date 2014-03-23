@@ -1,0 +1,11 @@
+server: localhost
+port: 6667
+password: default123
+nick: botox
+channels:
+  - '#botox'
+  - '#chitchat'
+admins:
+  - 
+    username: admin
+    password: admin123
