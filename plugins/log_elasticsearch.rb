@@ -1,5 +1,9 @@
-require 'elasticsearch'
-require 'json'
+begin
+  require 'elasticsearch'
+  require 'json'
+rescue LoadError
+  puts "Warning, gems required by log_elasticsearch are not installed"
+end
 
 class Plugins
   def get_elasticsearch_client
