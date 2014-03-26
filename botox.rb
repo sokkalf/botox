@@ -1,4 +1,3 @@
-require 'socket'
 require 'yaml'
 require 'pp'
 $LOAD_PATH.unshift File.dirname(__FILE__)
@@ -129,7 +128,7 @@ class ConnectionHandler
   include IRCConnection
 
   def initialize
-#    connection.set_encoding('UTF-8')
+    #connection.set_encoding('UTF-8')
     @admins = Hash.new
     @authenticated_admins = Hash.new
     @registered = false
@@ -246,7 +245,12 @@ class ConnectionHandler
 
   def connection_listener
     until connection.eof? do
-      raw_message_handler(connection.gets.chomp)
+      string = connection.readline.chomp.dup
+      string.force_encoding("UTF-8")
+      if !string.valid_encoding?
+        string.force_encoding("CP1252").encode!("UTF-8", {:invalid => :replace, :undef => :replace})
+      end
+      raw_message_handler(string)
     end
   end
 end

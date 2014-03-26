@@ -1,4 +1,6 @@
+require 'socket'
 require 'openssl'
+require 'net/protocol'
 
 $MAX_MESSAGE_LENGTH=450
 
@@ -36,24 +38,22 @@ module IRCConnection
     sock = TCPSocket.new(server, port)
     if ssl
       ctx = OpenSSL::SSL::SSLContext.new
-#      ctx.set_params(verify_mode: OpenSSL::SSL::VERIFY_PEER)
-#      ctx.ssl_version = :SSLv23
       connection = OpenSSL::SSL::SSLSocket.new(sock, ctx)
+      connection.sync = true
       connection.connect
     else
-      connection = sock.connect
+      connection = sock
     end
     connection
   end
 
   def self.connection
-    #@connection ||= TCPSocket.open(get_server, get_port)
-    @connection ||= get_connection(get_server, get_port, ssl?)
+    @connection ||= Net::BufferedIO.new(get_connection(get_server, get_port, ssl?))
   end
 
   def send_raw_message(message)
     unless message.length >= $MAX_MESSAGE_LENGTH
-      connection.puts(message)
+      connection.writeline(message)
     end
   end
 
