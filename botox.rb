@@ -129,7 +129,7 @@ class ConnectionHandler
   include IRCConnection
 
   def initialize
-    connection.set_encoding('UTF-8')
+#    connection.set_encoding('UTF-8')
     @admins = Hash.new
     @authenticated_admins = Hash.new
     @registered = false
