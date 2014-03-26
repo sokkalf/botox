@@ -205,10 +205,10 @@ class ConnectionHandler
   def register
     @registering = true
     unless get_config['password'].nil?
-      send_raw_message("pass #{get_config['password']}")
+      send_raw_message("PASS #{get_config['password']}")
     end
-    send_raw_message('user botox 0 * :botox IRC Bot')
-    send_raw_message("nick #{get_nick}")
+    send_raw_message("NICK #{get_nick}")
+    send_raw_message('USER botox 0 * :botox IRC Bot')
   end
 
   def update_channel_list(channel, members)
