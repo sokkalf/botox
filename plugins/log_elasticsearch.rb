@@ -9,4 +9,3 @@ class Plugins
   end
 end
 
-register_plugin('channel', 'elasticsearch_logger', 'log_message_to_elasticsearch')

@@ -17,4 +17,3 @@ class Plugins
   end
 end
 
-register_plugin('bot_command', 'op_plugin', 'give_op')

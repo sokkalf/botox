@@ -9,4 +9,3 @@ class Plugins
   end
 end
 
-register_plugin('channel', 'stdout_logger', 'log_message')

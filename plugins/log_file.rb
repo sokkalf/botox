@@ -11,4 +11,3 @@ class Plugins
   end
 end
 
-register_plugin('channel', 'file_logger', 'log_message_to_file')

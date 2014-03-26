@@ -267,6 +267,8 @@ end
 Dir.glob('plugins/*.rb').each do |filename|
   eval(File.open(filename).read)
 end
+# register plugins
+eval(File.open('register_plugins.rb').read)
 
 @ch.connection_listener
 

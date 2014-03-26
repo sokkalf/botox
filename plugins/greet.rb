@@ -20,4 +20,3 @@ class Plugins
   end
 end
 
-register_plugin('channel', 'greeting_plugin', 'greet')
