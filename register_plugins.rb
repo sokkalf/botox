@@ -1,5 +1,0 @@
-register_plugin('channel', 'greeting_plugin', 'greet')
-register_plugin('channel', 'elasticsearch_logger', 'log_message_to_elasticsearch')
-register_plugin('channel', 'file_logger', 'log_message_to_file')
-register_plugin('channel', 'stdout_logger', 'log_message')
-register_plugin('bot_command', 'op_plugin', 'give_op')
