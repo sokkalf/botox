@@ -147,10 +147,6 @@ class ConnectionHandler
     @reconnect
   end
 
-  def reconnect!
-    connection = nil
-  end
-
   def get_reconnect_wait_seconds
     @reconnect_wait_seconds
   end
@@ -295,11 +291,12 @@ eval(File.open('register_plugins.rb').read)
 while @ch.reconnect? do
   @ch.connection_listener
   puts "Connection lost, retrying in #{@ch.get_reconnect_wait_seconds} seconds."
+  @ch.send_raw_message('') # send 'nothing' to trigger a broken pipe, which again triggers a reconnect
   @ch.set_registered(false)
   @ch.wipe_channels
   sleep(@ch.get_reconnect_wait_seconds)
+  @ch.send_raw_message('')
   @ch.set_reconnect_wait_seconds(@ch.get_reconnect_wait_seconds * 2) # increase wait between each retry
-  @ch.reconnect!
   @ch.register
 end
 

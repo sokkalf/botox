@@ -51,8 +51,30 @@ module IRCConnection
     @connection ||= Net::BufferedIO.new(get_connection(get_server, get_port, ssl?))
   end
 
+  def set_connection(connection)
+    IRCConnection.set_connection(connection)
+  end
+
+  def self.set_connection(connection)
+    @connection = connection
+  end
+
+  def self.force_reconnect
+    Net::BufferedIO.new(self.get_connection(self.get_config['server'], self.get_config['port'], self.get_config['usessl']))
+  end
+
+  def force_reconnect
+    IRCConnection.force_reconnect
+  end
+
   def send_raw_message(message)
-    unless message.length >= $MAX_MESSAGE_LENGTH
+    begin
+      unless message.length >= $MAX_MESSAGE_LENGTH
+        connection.writeline(message)
+      end
+    rescue
+      # an exception occurs, do a reconnect
+      set_connection(IRCConnection.force_reconnect)
       connection.writeline(message)
     end
   end
