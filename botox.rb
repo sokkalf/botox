@@ -15,6 +15,7 @@ class EventHandler
     case numeric
       when '001' then 
         @ch.set_registered(true)
+        @ch.set_reconnect_wait_seconds(10) # reset wait timer on successful connect
         @ch.join_channels
       when '353' then
         channel = params.split[2]
@@ -128,7 +129,8 @@ class ConnectionHandler
   include IRCConnection
 
   def initialize
-    #connection.set_encoding('UTF-8')
+    @reconnect = true
+    @reconnect_wait_seconds = 10
     @admins = Hash.new
     @authenticated_admins = Hash.new
     @registered = false
@@ -139,6 +141,18 @@ class ConnectionHandler
     add_admins
     @eh = EventHandler.new(self)
     register
+  end
+
+  def reconnect?
+    @reconnect
+  end
+
+  def get_reconnect_wait_seconds
+    @reconnect_wait_seconds
+  end
+
+  def set_reconnect_wait_seconds(seconds)
+    @reconnect_wait_seconds = seconds
   end
 
   def register_plugin(type, name, func)
@@ -237,6 +251,10 @@ class ConnectionHandler
     end
   end
 
+  def wipe_channels
+    @channels_joined = Hash.new
+  end
+
   def raw_message_handler(raw_message)
     prefix, type, params, message = raw_message.match(/^(?:[:](\S+) )?(\S+)(?: (?!:)(.+?))?(?: [:](.+))?$/).captures
     @eh.handle_event(prefix, type, params, message)
@@ -269,5 +287,15 @@ end
 # register plugins
 eval(File.open('register_plugins.rb').read)
 
-@ch.connection_listener
+while @ch.reconnect? do
+  @ch.connection_listener
+  puts "Connection lost, retrying in #{@ch.get_reconnect_wait_seconds} seconds."
+  @ch.send_raw_message('') # send 'nothing' to trigger a broken pipe, which again triggers a reconnect
+  @ch.set_registered(false)
+  @ch.wipe_channels
+  sleep(@ch.get_reconnect_wait_seconds)
+  @ch.send_raw_message('')
+  @ch.set_reconnect_wait_seconds(@ch.get_reconnect_wait_seconds * 2) # increase wait between each retry
+  @ch.register
+end
 
