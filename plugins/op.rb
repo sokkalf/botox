@@ -8,10 +8,20 @@ class Plugins
     
     case command.upcase
       when 'OP' then
-        if op_in_channel?(params, get_nick)
-          change_mode(get_nick_from_prefix(mask), params, '+o') if authenticated?(mask)
-        else
-          send_message_to_user(get_nick_from_prefix(mask), "I'm not in that channel, or not operator.")
+        matcher = params.match(/(\S+)\s*(.*)$/)
+        unless matcher.nil?
+          channel, user = matcher.captures
+          pp channel
+          pp user
+          if op_in_channel?(channel, get_nick)
+            if user.nil? && user.blank?
+              change_mode(get_nick_from_prefix(mask), channel, '+o') if authenticated?(mask)
+            else
+              change_mode(user, channel, '+o') if authenticated?(mask)
+            end
+          else
+            send_message_to_user(get_nick_from_prefix(mask), "I'm not in that channel, or not operator.")
+          end
         end
     end
   end

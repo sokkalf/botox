@@ -2,7 +2,7 @@ begin
   require 'elasticsearch'
   require 'json'
 rescue LoadError
-  puts "Warning, gems required by log_elasticsearch are not installed"
+  puts 'Warning, gems required by log_elasticsearch are not installed'
 end
 
 class Plugins
@@ -17,7 +17,7 @@ class Plugins
   def log_message_to_elasticsearch
     log_line = yield
     #client = Elasticsearch::Client.new log: false
-    response = get_elasticsearch_client.index index: 'irc_log', type: 'irc_message', body: log_line.to_json
+    get_elasticsearch_client.index index: 'irc_log', type: 'irc_message', body: log_line.to_json
   end
 end
 

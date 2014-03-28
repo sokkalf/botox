@@ -26,7 +26,7 @@ module IRCConnection
   end
 
   def self.ssl?
-    get_config['usessl'] || false
+    get_config['usessl']
   end
 
   def connection
@@ -34,7 +34,6 @@ module IRCConnection
   end
 
   def self.get_connection(server, port, ssl)
-    connection = nil
     sock = TCPSocket.new(server, port)
     if ssl
       ctx = OpenSSL::SSL::SSLContext.new
@@ -52,7 +51,7 @@ module IRCConnection
   end
 
   def send_raw_message(message)
-    unless message.length >= $MAX_MESSAGE_LENGTH
+    unless message.length > $MAX_MESSAGE_LENGTH
       connection.writeline(message)
     end
   end

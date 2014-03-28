@@ -153,8 +153,7 @@ class ConnectionHandler
   end
  
   def get_plugins(type)
-    registered_plugins = @plugins[type]
-    registered_plugins ||= []
+    @plugins[type]
   end
 
   def get_startup_time
@@ -178,10 +177,10 @@ class ConnectionHandler
         @authenticated_admins[prefix] = username
         @eh.send_message_to_user(get_nick_from_prefix(prefix), "Greetings, #{@eh.get_nick_from_prefix(prefix)}, you are authenticated as #{username}.")
       else
-        @eh.send_message_to_user(get_nick_from_prefix(prefix), "Sorry, authentication failed.")
+        @eh.send_message_to_user(get_nick_from_prefix(prefix), 'Sorry, authentication failed.')
       end
     else
-      @eh.send_message_to_user(get_nick_from_prefix(prefix), "You are already authenticated.")
+      @eh.send_message_to_user(get_nick_from_prefix(prefix), 'You are already authenticated.')
     end
   end
 
@@ -246,9 +245,9 @@ class ConnectionHandler
   def connection_listener
     until connection.eof? do
       string = connection.readline.chomp.dup
-      string.force_encoding("UTF-8")
+      string.force_encoding('UTF-8')
       if !string.valid_encoding?
-        string.force_encoding("CP1252").encode!("UTF-8", {:invalid => :replace, :undef => :replace})
+        string.force_encoding('CP1252').encode!('UTF-8', {:invalid => :replace, :undef => :replace})
       end
       raw_message_handler(string)
     end
