@@ -99,7 +99,6 @@ class EventHandler
           @ch.update_channel_list(channel, members)
         end
       when 'MODE' then
-        # 'aaa!~sokkalf@localhost' 'MODE' '#dirc +o botox' '' 
         channel, mode, nick = params.match(/^(\S*)\s(\S*)\s(\S*)$/).captures
         members = @ch.get_channel_members(channel).map{|member|
           if member['nick'] == nick
@@ -256,7 +255,7 @@ class ConnectionHandler
   end
 
   def raw_message_handler(raw_message)
-    prefix, type, params, message = raw_message.match(/^(?:[:](\S+) )?(\S+)(?: (?!:)(.+?))?(?: [:](.+))?$/).captures
+    prefix, type, params, message = raw_message.match(/^(?:[:](\S+) )?(\S+)(?: (?!:)(.+?))?(?: [:](.*))?$/).captures
     @eh.handle_event(prefix, type, params, message)
   end
 
